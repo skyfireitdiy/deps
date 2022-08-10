@@ -5,8 +5,6 @@ import re
 import sys
 import os
 import shutil
-from unittest import loader
-
 
 def get_deps(elf):
     output = subprocess.check_output("ldd " + elf, shell=True).decode()
