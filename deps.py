@@ -44,14 +44,16 @@ def resolve_deps(elf, deps, work_dir):
     os.makedirs(bin_dir, exist_ok=True)
     elf_name = os.path.basename(elf)
     shutil.copy(elf, os.path.join(bin_dir, elf_name))
+    start_script = os.path.join(work_dir, elf_name)
 
-    with open(os.path.join(work_dir, elf_name), "w") as fp:
+    with open(start_script, "w") as fp:
         fp.write(
             '''#!/bin/bash
 DIR=$(dirname $(realpath $0))
 $DIR/lib/%s --library-path $DIR/lib $DIR/bin/%s $*
 ''' % (loader_name, elf_name)
         )
+    os.chmod(start_script, 0o755)
 
 
 def main():
