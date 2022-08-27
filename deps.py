@@ -6,6 +6,7 @@ import sys
 import os
 import shutil
 
+
 def get_deps(elf):
     output = subprocess.check_output("ldd " + elf, shell=True).decode()
     r = re.compile(r'''([\w.\-\d/]+)\s*(=>)?\s*([\w.\-\d/]+)*\s+\(.*\)''')
@@ -25,52 +26,41 @@ def get_deps(elf):
     return (ld, libs)
 
 
-def resolve_deps(elf, deps, workdir):
+def resolve_deps(elf, deps, work_dir):
     libs = deps[1]
-    libdir = os.path.join(workdir, "lib")
-    os.makedirs(libdir, exist_ok=True)
+    lib_dir = os.path.join(work_dir, "lib")
+    os.makedirs(lib_dir, exist_ok=True)
     for k, v in libs.items():
         realpath = os.path.realpath(v)
         if realpath == "":
             print(v, "not found!")
             sys.exit(0)
-        shutil.copy(realpath, os.path.join(libdir, k))
+        shutil.copy(realpath, os.path.join(lib_dir, k))
     loader_name = os.path.basename(deps[0])
-    loader_path = os.path.join(libdir, loader_name)
+    loader_path = os.path.join(lib_dir, loader_name)
     shutil.copy(deps[0], loader_path)
 
-    bindir = os.path.join(workdir, "bin")
-    os.makedirs(bindir, exist_ok=True)
-    elfname = os.path.basename(elf)
-    shutil.copy(elf, os.path.join(bindir, elfname))
+    bin_dir = os.path.join(work_dir, "bin")
+    os.makedirs(bin_dir, exist_ok=True)
+    elf_name = os.path.basename(elf)
+    shutil.copy(elf, os.path.join(bin_dir, elf_name))
 
-    with open(os.path.join(workdir, elfname), "w") as fp:
+    with open(os.path.join(work_dir, elf_name), "w") as fp:
         fp.write(
             '''#!/bin/bash
-DIR=$0
-get_real(){
- if [ -h $DIR ]; then
-  DIR=$(readlink $DIR)
-  get_real
- else
-  DIR=$(dirname $DIR)
- fi
-}
-
-get_real
-
+DIR=$(dirname $(realpath $0))
 $DIR/lib/%s --library-path $DIR/lib $DIR/bin/%s $*
-''' % (loader_name, elfname)
+''' % (loader_name, elf_name)
         )
 
 
 def main():
     parser = argparse.ArgumentParser("deps")
-    parser.add_argument("elfpath")
+    parser.add_argument("elf_path")
     parser.add_argument("-d", "--directory", required=True, help="工作路径")
     result = parser.parse_args()
-    deps = get_deps(result.elfpath)
-    resolve_deps(result.elfpath, deps, result.directory)
+    deps = get_deps(result.elf_path)
+    resolve_deps(result.elf_path, deps, result.directory)
 
 
 if __name__ == "__main__":
