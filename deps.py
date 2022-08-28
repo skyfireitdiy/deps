@@ -9,7 +9,7 @@ import shutil
 
 def get_deps(elf):
     output = subprocess.check_output("ldd " + elf, shell=True).decode()
-    r = re.compile(r'''([\w.\-\d/]+)\s*(=>)?\s*([\w.\-\d/]+)*\s+\(.*\)''')
+    r = re.compile(r'''([\w.\-\d/+]+)\s*(=>)?\s*([\w.\-\d/+]+)*\s+\(.*\)''')
     result = r.findall(output)
     libs = {}
     ld = ""
