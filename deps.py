@@ -9,20 +9,15 @@ import shutil
 
 def get_deps(elf):
     output = subprocess.check_output("ldd " + elf, shell=True).decode()
-    r = re.compile(r'''([\w.\-\d/+]+)\s*(=>)?\s*([\w.\-\d/+]+)*\s+\(.*\)''')
-    result = r.findall(output)
-    libs = {}
     ld = ""
-    for r in result:
-        if "vdso.so" in r[0]:
-            continue
-        if "ld-linux-" in r[0]:
-            ld = r[0]
-            continue
-        if r[2] == "":
-            print(r[0], "not found!")
-            sys.exit(0)
-        libs[r[0]] = r[2]
+    libs = {}
+    for line in output.splitlines():
+        if "=>" in line:
+            cols = line.split("=>")
+            target = cols[1].split("(")[0].strip()
+            libs[cols[0].strip()] = target
+        elif "ld-linux" in line:
+            ld = line.split()[0]
     return (ld, libs)
 
 
