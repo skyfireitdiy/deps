@@ -30,17 +30,28 @@ Let's say you want to package the `ls` command:
 deps ls -d /tmp/ls_package
 ```
 
-This will create a directory `/tmp/ls_package` with the following structure:
+This will create a directory `/tmp/ls_package`.
 
+If `patchelf` is available on your system, the structure will be:
 ```
 /tmp/ls_package/
-├── bin/
-│   └── ls      # The original executable, potentially patched
 ├── lib/
 │   ├── libc.so.6
 │   ├── ld-linux-x86-64.so.2
 │   └── ...     # Other dependencies
-└── ls          # A launcher script or symlink to bin/ls
+└── ls          # The patched executable
+```
+
+If `patchelf` is not found, it will fall back to using a wrapper script, and the structure will be:
+```
+/tmp/ls_package/
+├── bin/
+│   └── ls      # The original executable
+├── lib/
+│   ├── libc.so.6
+│   ├── ld-linux-x86-64.so.2
+│   └── ...     # Other dependencies
+└── ls          # A launcher script that calls the executable in bin/
 ```
 
 You can then run the packaged application by executing the launcher:

@@ -30,17 +30,28 @@ deps <executable_name> -d <output_directory>
 deps ls -d /tmp/ls_package
 ```
 
-这将在 `/tmp/ls_package` 目录下创建如下结构：
+这将在 `/tmp/ls_package` 目录下创建应用包。
 
+如果您的系统上存在 `patchelf`，目录结构会是这样：
 ```
 /tmp/ls_package/
-├── bin/
-│   └── ls      # 原始可执行文件，可能已被 patchelf 修改
 ├── lib/
 │   ├── libc.so.6
 │   ├── ld-linux-x86-64.so.2
 │   └── ...     # 其他依赖库
-└── ls          # 指向 bin/ls 的启动脚本或符号链接
+└── ls          # 已被 patchelf 修改的可执行文件
+```
+
+如果未找到 `patchelf`，工具会回退到使用包装脚本，目录结构会是这样：
+```
+/tmp/ls_package/
+├── bin/
+│   └── ls      # 原始可执行文件
+├── lib/
+│   ├── libc.so.6
+│   ├── ld-linux-x86-64.so.2
+│   └── ...     # 其他依赖库
+└── ls          # 调用 bin/ 目录下可执行文件的启动脚本
 ```
 
 您可以通过执行启动器来运行打包好的应用：

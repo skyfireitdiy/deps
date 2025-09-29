@@ -39,30 +39,31 @@ def resolve_deps(elf, deps, work_dir):
     print(f"copy {deps[0]} => {loader_path}")
     shutil.copy(deps[0], loader_path)
 
-    bin_dir = os.path.join(work_dir, "bin")
-    print(f"mkdir {bin_dir}")
-    os.makedirs(bin_dir, exist_ok=True)
     elf_name = os.path.basename(elf)
-    elf_path = os.path.join(bin_dir, elf_name)
-    print(f"copy {elf} => {elf_path}")
-    shutil.copy(elf, elf_path)
-
     if shutil.which("patchelf"):
-        print("patchelf found, patching elf")
+        elf_path = os.path.join(work_dir, elf_name)
+        print(f"copy {elf} => {elf_path}")
+        shutil.copy(elf, elf_path)
+        os.chmod(elf_path, 0o755)
+
+        print("patchelf found, patching elf in-place")
         subprocess.run(
             ["patchelf", "--set-interpreter",
-                f"../lib/{loader_name}", elf_path],
+                f"lib/{loader_name}", elf_path],
             check=True)
         subprocess.run(
-            ["patchelf", "--set-rpath", "$ORIGIN/../lib", elf_path],
+            ["patchelf", "--set-rpath", "$ORIGIN/lib", elf_path],
             check=True)
-
-        start_script = os.path.join(work_dir, elf_name)
-        if os.path.lexists(start_script):
-            os.remove(start_script)
-        os.symlink(f"bin/{elf_name}", start_script)
-        print(f"create symlink {start_script} -> bin/{elf_name}")
     else:
+        print("warning: 'patchelf' not found. Creating a wrapper script.")
+        print("warning: The executable may not be portable to systems without the exact library paths.")
+        bin_dir = os.path.join(work_dir, "bin")
+        print(f"mkdir {bin_dir}")
+        os.makedirs(bin_dir, exist_ok=True)
+        elf_path = os.path.join(bin_dir, elf_name)
+        print(f"copy {elf} => {elf_path}")
+        shutil.copy(elf, elf_path)
+
         start_script = os.path.join(work_dir, elf_name)
         print(f"write start script to {start_script}")
         with open(start_script, "w") as fp:
