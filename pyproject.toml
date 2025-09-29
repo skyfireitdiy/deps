@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deps-resolver"
+version = "0.1.0"
+authors = [
+  { name="skyfire", email="skyfireitdiy@hotmail.com" },
+]
+description = "A simple tool to resolve and package ELF dependencies"
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.scripts]
+deps = "deps:main"
