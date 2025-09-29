@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-import argparse
 import subprocess
 import re
 import sys
 import os
 import shutil
+from pathlib import Path
+import typer
+from typing_extensions import Annotated
 
 
 def get_deps(elf):
@@ -74,20 +76,32 @@ $DIR/lib/{loader_name} --library-path $DIR/lib $DIR/bin/{elf_name} $*
 ''')
         os.chmod(start_script, 0o755)
 
-def main():
-    parser = argparse.ArgumentParser("deps")
-    parser.add_argument("elf_path")
-    parser.add_argument("-d", "--directory", required=True, help="工作路径")
-    result = parser.parse_args()
-    elf = subprocess.check_output(
-        "which " + result.elf_path, shell=True).decode().strip()
+app = typer.Typer()
+
+@app.command()
+def main(
+    elf_path: Annotated[str, typer.Argument(help="The ELF executable to process.")],
+    directory: Annotated[Path, typer.Option("-d", "--directory", help="The output directory for the packaged application.", rich_help_panel="Customization and Utils")],
+):
+    """
+    Finds all shared library dependencies for an ELF executable,
+    copies them into a deployable directory structure, and creates a launcher.
+    """
+    try:
+        elf = subprocess.check_output(
+            f"which {elf_path}", shell=True).decode().strip()
+    except subprocess.CalledProcessError:
+        elf = ""
+        
     if not elf:
-        print(f"{elf} not found!")
-        exit()
+        print(f"Error: Executable '{elf_path}' not found in PATH.")
+        raise typer.Exit(code=1)
+        
+    print(f"Processing '{elf}'...")
     deps = get_deps(elf)
-    resolve_deps(elf, deps, result.directory)
-    print("finished")
+    resolve_deps(elf, deps, str(directory))
+    print("Finished!")
 
 
 if __name__ == "__main__":
-    main()
+    app()

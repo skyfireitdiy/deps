@@ -11,6 +11,9 @@ authors = [
 description = "A simple tool to resolve and package ELF dependencies"
 readme = "README.md"
 requires-python = ">=3.12"
+dependencies = [
+    "typer[all]",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
