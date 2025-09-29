@@ -43,19 +43,35 @@ def resolve_deps(elf, deps, work_dir):
     print(f"mkdir {bin_dir}")
     os.makedirs(bin_dir, exist_ok=True)
     elf_name = os.path.basename(elf)
-    print(f"copy {elf} => {os.path.join(bin_dir, elf_name)}")
-    shutil.copy(elf, os.path.join(bin_dir, elf_name))
-    start_script = os.path.join(work_dir, elf_name)
+    elf_path = os.path.join(bin_dir, elf_name)
+    print(f"copy {elf} => {elf_path}")
+    shutil.copy(elf, elf_path)
 
-    print(f"write start script to {start_script}")
-    with open(start_script, "w") as fp:
-        fp.write(
-            f'''#!/bin/bash
+    if shutil.which("patchelf"):
+        print("patchelf found, patching elf")
+        subprocess.run(
+            ["patchelf", "--set-interpreter",
+                f"../lib/{loader_name}", elf_path],
+            check=True)
+        subprocess.run(
+            ["patchelf", "--set-rpath", "$ORIGIN/../lib", elf_path],
+            check=True)
+
+        start_script = os.path.join(work_dir, elf_name)
+        if os.path.lexists(start_script):
+            os.remove(start_script)
+        os.symlink(f"bin/{elf_name}", start_script)
+        print(f"create symlink {start_script} -> bin/{elf_name}")
+    else:
+        start_script = os.path.join(work_dir, elf_name)
+        print(f"write start script to {start_script}")
+        with open(start_script, "w") as fp:
+            fp.write(
+                f'''#!/bin/bash
 DIR=$(dirname $(realpath $0))
 $DIR/lib/{loader_name} --library-path $DIR/lib $DIR/bin/{elf_name} $*
 ''')
-    os.chmod(start_script, 0o755)
-
+        os.chmod(start_script, 0o755)
 
 def main():
     parser = argparse.ArgumentParser("deps")
