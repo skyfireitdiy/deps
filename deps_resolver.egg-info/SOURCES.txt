@@ -1,0 +1,8 @@
+README.md
+deps.py
+pyproject.toml
+deps_resolver.egg-info/PKG-INFO
+deps_resolver.egg-info/SOURCES.txt
+deps_resolver.egg-info/dependency_links.txt
+deps_resolver.egg-info/entry_points.txt
+deps_resolver.egg-info/top_level.txt
